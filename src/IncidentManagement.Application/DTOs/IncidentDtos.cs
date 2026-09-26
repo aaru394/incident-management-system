@@ -12,6 +12,8 @@ public record AddIncidentCommentRequest(string Message);
 
 public record IncidentCommentResponse(Guid Id, Guid UserId, string UserName, string Message, DateTime CreatedAt);
 
+public record IncidentStatusChangeResponse(IncidentStatus FromStatus, IncidentStatus ToStatus, string ChangedByName, DateTime ChangedAt);
+
 public record IncidentResponse(
     Guid Id,
     string Title,
@@ -26,7 +28,9 @@ public record IncidentResponse(
     Guid ReporterId,
     string ReporterName,
     Guid? AssignedToId,
-    string? AssignedToName);
+    string? AssignedToName,
+    IReadOnlyList<IncidentCommentResponse> Comments,
+    IReadOnlyList<IncidentStatusChangeResponse> StatusHistory);
 
 public record PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount)
 {

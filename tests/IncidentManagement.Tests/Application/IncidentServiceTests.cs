@@ -56,7 +56,8 @@ public class IncidentServiceTests
         var cached = new IncidentResponse(
             Guid.NewGuid(), "Cached title", "desc", IncidentSeverity.Sev2, IncidentStatus.Open,
             DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow.AddHours(24), false, null,
-            Guid.NewGuid(), "Reporter", null, null);
+            Guid.NewGuid(), "Reporter", null, null,
+            [], []);
 
         _cache.Setup(c => c.GetAsync<IncidentResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(cached);

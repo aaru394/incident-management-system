@@ -23,6 +23,9 @@ src/
   IncidentManagement.Api             # Controllers, middleware, DI wiring, Swagger
 tests/
   IncidentManagement.Tests           # xUnit + Moq unit tests for domain rules and application services
+frontend/
+  React + TypeScript + Vite console — login/register, incident dashboard, detail view with
+  assign/status/comments
 ```
 
 **Domain layer owns the business rules.** `Incident.ChangeStatus()` enforces a status-transition state machine
@@ -42,6 +45,7 @@ at creation time (Sev1: 4h, Sev2: 24h, Sev3: 72h) and `IsSlaBreached` is a compu
 | Docs                | Swagger / OpenAPI with bearer auth support |
 | Tests               | xUnit, Moq, EF Core InMemory              |
 | Containerization    | Docker, docker-compose                    |
+| Frontend            | React 19, TypeScript, Vite, React Router  |
 
 ## Running locally
 
@@ -51,19 +55,31 @@ at creation time (Sev1: 4h, Sev2: 24h, Sev3: 72h) and `IsSlaBreached` is a compu
 docker compose up --build
 ```
 
-This starts PostgreSQL, Redis, and the API (migrations apply automatically on startup in Development).
-API is available at `http://localhost:8080`, Swagger UI at `http://localhost:8080/swagger`.
+This starts PostgreSQL, Redis, the API, and the frontend (migrations apply automatically on startup in
+Development). App is available at `http://localhost:5173`, API at `http://localhost:8080`, Swagger UI at
+`http://localhost:8080/swagger`.
 
 ### Without Docker
 
 1. Start PostgreSQL and Redis locally (or point the connection strings in `appsettings.json` at existing
    instances).
 2. Update `Jwt:Secret` in `src/IncidentManagement.Api/appsettings.json` to a real random secret.
-3. Run:
+3. Run the API:
 
 ```bash
 dotnet run --project src/IncidentManagement.Api
 ```
+
+4. Run the frontend (in a separate terminal):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend dev server runs at `http://localhost:5173` and expects the API at `http://localhost:8080/api`
+(configurable via `frontend/.env`).
 
 ## Running tests
 
@@ -94,3 +110,10 @@ Full request/response contracts are in Swagger UI once the API is running.
   mapped to `400 Bad Request` via `ExceptionHandlingMiddleware`.
 - **Audit trail**: every status change is recorded in `IncidentStatusChange`, so "who changed what, when" is
   always answerable — the same requirement incident-management tooling has for compliance.
+- **Client-generated Guid keys need `ValueGeneratedNever()`**: entity IDs are assigned client-side
+  (`Guid.NewGuid()` in `BaseEntity`) rather than by the database. Without explicitly configuring
+  `ValueGenerated.Never` on the key (see `AppDbContext.OnModelCreating`), EF Core's default convention
+  misclassifies newly-added child entities (e.g. a new `IncidentStatusChange` audit row) as `Modified` instead
+  of `Added`, since the key already has a non-default value — this produces an UPDATE statement against a row
+  that doesn't exist yet and throws `DbUpdateConcurrencyException` with "expected to affect 1 row(s), but
+  actually affected 0". Diagnosed by dumping `ChangeTracker.Entries()` state before `SaveChanges`.

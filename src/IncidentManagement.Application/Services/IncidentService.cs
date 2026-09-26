@@ -65,7 +65,6 @@ public class IncidentService(
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
         incident.AssignTo(request.UserId, changedByUserId);
-        incidentRepository.Update(incident);
         await incidentRepository.SaveChangesAsync(ct);
         await InvalidateAsync(incidentId, ct);
 
@@ -78,7 +77,6 @@ public class IncidentService(
             ?? throw new NotFoundException(nameof(Incident), incidentId);
 
         incident.ChangeStatus(request.Status, changedByUserId);
-        incidentRepository.Update(incident);
         await incidentRepository.SaveChangesAsync(ct);
         await InvalidateAsync(incidentId, ct);
 
@@ -103,7 +101,6 @@ public class IncidentService(
         };
 
         incident.Comments.Add(comment);
-        incidentRepository.Update(incident);
         await incidentRepository.SaveChangesAsync(ct);
         await InvalidateAsync(incidentId, ct);
 
@@ -127,5 +124,13 @@ public class IncidentService(
         incident.ReporterId,
         reporter?.FullName ?? string.Empty,
         incident.AssignedToId,
-        assignedTo?.FullName);
+        assignedTo?.FullName,
+        incident.Comments
+            .OrderBy(c => c.CreatedAt)
+            .Select(c => new IncidentCommentResponse(c.Id, c.UserId, c.User?.FullName ?? string.Empty, c.Message, c.CreatedAt))
+            .ToList(),
+        incident.StatusHistory
+            .OrderBy(h => h.CreatedAt)
+            .Select(h => new IncidentStatusChangeResponse(h.FromStatus, h.ToStatus, h.ChangedByUser?.FullName ?? string.Empty, h.CreatedAt))
+            .ToList());
 }

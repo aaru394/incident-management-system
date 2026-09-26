@@ -15,7 +15,7 @@ public class IncidentRepository(AppDbContext context) : IIncidentRepository
             .Include(i => i.Reporter)
             .Include(i => i.AssignedTo)
             .Include(i => i.Comments).ThenInclude(c => c.User)
-            .Include(i => i.StatusHistory)
+            .Include(i => i.StatusHistory).ThenInclude(h => h.ChangedByUser)
             .FirstOrDefaultAsync(i => i.Id == id, ct);
 
     public async Task<(IReadOnlyList<Incident> Items, int TotalCount)> QueryAsync(IncidentQueryParameters parameters, CancellationToken ct = default)
@@ -56,8 +56,6 @@ public class IncidentRepository(AppDbContext context) : IIncidentRepository
         context.Incidents.Add(incident);
         return Task.CompletedTask;
     }
-
-    public void Update(Incident incident) => context.Incidents.Update(incident);
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
 }

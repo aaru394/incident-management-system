@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY IncidentManagementSystem.sln .
+COPY IncidentManagementSystem.slnx .
 COPY src/IncidentManagement.Api/IncidentManagement.Api.csproj src/IncidentManagement.Api/
 COPY src/IncidentManagement.Application/IncidentManagement.Application.csproj src/IncidentManagement.Application/
 COPY src/IncidentManagement.Domain/IncidentManagement.Domain.csproj src/IncidentManagement.Domain/

@@ -8,3 +8,7 @@ obj/
 
 **/appsettings.Local.json
 **/appsettings.Production.json
+
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
